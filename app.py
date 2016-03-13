@@ -1,4 +1,4 @@
-from flask import Flask,jsonify,abort,make_response
+from flask import Flask,jsonify,abort,make_response,request
 
 app = Flask(__name__)
 
@@ -21,6 +21,26 @@ tasks = [
 def not_found(error):
     return make_response(jsonify({'error':'Not Found'}),404)
 
+#api for deleting a particular task
+@app.route('')
+
+
+#api for posting the data
+@app.route('/todo/api/v1.0/tasks',methods = ['POST'])
+def create_task():
+    if not request.json or not 'title' in request.json:
+        abort(400)
+    task = {
+              'id':tasks[-1]['id']+1,
+              'title':request.json['title'],
+              'description':request.json.get('description',""),
+              'done':False
+           }
+    print 'REQUEST.JSON',request.json
+    tasks.append(task)
+    return jsonify({'task':task}),201
+
+
 #api get the task corresponding to a particuar task
 @app.route('/todo/api/v1.0/tasks/<int:task_id>',methods=['GET'])
 def get_task(task_id):
@@ -28,6 +48,7 @@ def get_task(task_id):
     if len(task) == 0:
         abort(404)
     return jsonify({'task':task[0]})
+
 
 #api get get all  the tasks
 @app.route('/todo/api/v1.0/tasks',methods = ['GET'])
