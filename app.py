@@ -1,4 +1,7 @@
-from flask import Flask,jsonify,abort,make_response,request
+from flask import Flask,jsonify,abort,make_response,request,url_for
+from flask.ext.httpauth import HTTPBasicAuth	
+
+auth = HTTPBasicAuth()	
 
 app = Flask(__name__)
 
@@ -20,6 +23,35 @@ tasks = [
 @app.errorhandler(404)
 def not_found(error):
     return make_response(jsonify({'error':'Not Found'}),404)
+
+
+#adding security to the apis
+#here we just checked it simply but in real life we will check it using database
+@auth.get_password   #decorator
+def get_password(username):
+    if username == 'abhishek':
+        return 'hiro_dev'
+    return none 
+
+#error callback for handling the error 401 i.e unauthorized error
+@app.errorhandler
+def unauthorized():
+    return make_response(jsonify({'error':'Unauthorized error'}),401)
+
+
+#the problem with the current design of api is  that the clients are
+#forced to construct uri from the task identifiers that are returned
+#it indirectly forces clents that to knnow how these uri needs to be built
+
+#so a helper function that generated a public version of the task send to the client
+def make_public_task(task):
+    new_task = {}
+    for field in task:
+        if field == 'id':
+            new_task['uri'] = url_for('get_task',task_id=task['id'],_external=True)
+        else:
+            new_task[field] = task[field]
+    return new_task
 
 #api for deleting a particular task
 @app.route('/todo/api/v1.0/tasks/<int:task_id>',methods=['DELETE'])
@@ -58,8 +90,9 @@ def get_task(task_id):
 
 #api get get all  the tasks
 @app.route('/todo/api/v1.0/tasks',methods = ['GET'])
+@auth.login_required
 def get_tasks():
-    return jsonify({'tasks':tasks})
+    return jsonify({'tasks':[make_public_task(task) for task in tasks]})  #similar to the map function in the javascript
 
 #api for updating the data
 @app.route('/todo/api/v1.0/tasks/<int:task_id>',methods=['PUT'])
