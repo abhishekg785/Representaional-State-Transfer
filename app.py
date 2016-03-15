@@ -30,13 +30,13 @@ def not_found(error):
 @auth.get_password   #decorator
 def get_password(username):
     if username == 'abhishek':
-        return 'hiro_dev'
+        return 'you_wanna_my_password'
     return none 
 
 #error callback for handling the error 401 i.e unauthorized error
 @app.errorhandler
 def unauthorized():
-    return make_response(jsonify({'error':'Unauthorized error'}),401)
+    return make_response(jsonify({'error':'Unauthorized error'}),403)
 
 
 #the problem with the current design of api is  that the clients are
@@ -81,6 +81,7 @@ def create_task():
 
 #api get the task corresponding to a particuar task
 @app.route('/todo/api/v1.0/tasks/<int:task_id>',methods=['GET'])
+@auth.login_required
 def get_task(task_id):
     task = [task for task in tasks if task['id'] == task_id]
     if len(task) == 0:
